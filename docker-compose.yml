@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:17.0
+    container_name: finance_platform_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: newpassword
+      POSTGRES_DB: finance_platform
+    ports:
+      - "5433:5432"  # Changed from 5432 to 5433 to avoid conflict
+    volumes:
+      - finance_db_data:/var/lib/postgresql/data
+
+volumes:
+  finance_db_data:

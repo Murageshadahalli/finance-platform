@@ -41,119 +41,10 @@ const PREVIEW_DATA = {
       percentageUsed: 85,
       budgetAmount: 4000,
       totalExpenses: 3400,
+      category: "General"
     },
   },
 };
-
-export default function EmailTemplate({
-  userName = "",
-  type = "monthly-report",
-  data = {},
-}) {
-  if (type === "monthly-report") {
-    return (
-      <Html>
-        <Head />
-        <Preview>Your Monthly Financial Report</Preview>
-        <Body style={styles.body}>
-          <Container style={styles.container}>
-            <Heading style={styles.title}>Monthly Financial Report</Heading>
-
-            <Text style={styles.text}>Hello {userName},</Text>
-            <Text style={styles.text}>
-              Here&rsquo;s your financial summary for {data?.month}:
-            </Text>
-
-            {/* Main Stats */}
-            <Section style={styles.statsContainer}>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Total Income</Text>
-                <Text style={styles.heading}>${data?.stats.totalIncome}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Total Expenses</Text>
-                <Text style={styles.heading}>${data?.stats.totalExpenses}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Net</Text>
-                <Text style={styles.heading}>
-                  ${data?.stats.totalIncome - data?.stats.totalExpenses}
-                </Text>
-              </div>
-            </Section>
-
-            {/* Category Breakdown */}
-            {data?.stats?.byCategory && (
-              <Section style={styles.section}>
-                <Heading style={styles.heading}>Expenses by Category</Heading>
-                {Object.entries(data?.stats.byCategory).map(
-                  ([category, amount]) => (
-                    <div key={category} style={styles.row}>
-                      <Text style={styles.text}>{category}</Text>
-                      <Text style={styles.text}>${amount}</Text>
-                    </div>
-                  )
-                )}
-              </Section>
-            )}
-
-            {/* AI Insights */}
-            {data?.insights && (
-              <Section style={styles.section}>
-                <Heading style={styles.heading}>Welth Insights</Heading>
-                {data.insights.map((insight, index) => (
-                  <Text key={index} style={styles.text}>
-                    • {insight}
-                  </Text>
-                ))}
-              </Section>
-            )}
-
-            <Text style={styles.footer}>
-              Thank you for using Welth. Keep tracking your finances for better
-              financial health!
-            </Text>
-          </Container>
-        </Body>
-      </Html>
-    );
-  }
-
-  if (type === "budget-alert") {
-    return (
-      <Html>
-        <Head />
-        <Preview>Budget Alert</Preview>
-        <Body style={styles.body}>
-          <Container style={styles.container}>
-            <Heading style={styles.title}>Budget Alert</Heading>
-            <Text style={styles.text}>Hello {userName},</Text>
-            <Text style={styles.text}>
-              You&rsquo;ve used {data?.percentageUsed.toFixed(1)}% of your
-              monthly budget.
-            </Text>
-            <Section style={styles.statsContainer}>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Budget Amount</Text>
-                <Text style={styles.heading}>${data?.budgetAmount}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Spent So Far</Text>
-                <Text style={styles.heading}>${data?.totalExpenses}</Text>
-              </div>
-              <div style={styles.stat}>
-                <Text style={styles.text}>Remaining</Text>
-                <Text style={styles.heading}>
-                  ${data?.budgetAmount - data?.totalExpenses}
-                </Text>
-              </div>
-            </Section>
-          </Container>
-        </Body>
-      </Html>
-    );
-  }
-}
 
 const styles = {
   body: {
@@ -200,23 +91,171 @@ const styles = {
   },
   stat: {
     marginBottom: "16px",
-    padding: "12px",
-    backgroundColor: "#fff",
-    borderRadius: "4px",
-    boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
   },
   row: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "12px 0",
-    borderBottom: "1px solid #e5e7eb",
+    marginBottom: "8px",
   },
   footer: {
-    color: "#6b7280",
-    fontSize: "14px",
-    textAlign: "center",
     marginTop: "32px",
-    paddingTop: "16px",
-    borderTop: "1px solid #e5e7eb",
+    fontSize: "14px",
+    color: "#6b7280",
+    textAlign: "center",
   },
 };
+
+export default function EmailTemplate({
+  userName = "",
+  type = "monthly-report",
+  data = {},
+}) {
+  // Set default values based on type
+  const defaults = {
+    "monthly-report": {
+      month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' }),
+      stats: {
+        totalIncome: 0,
+        totalExpenses: 0,
+        byCategory: {},
+      },
+      insights: []
+    },
+    "budget-alert": {
+      percentageUsed: 0,
+      budgetAmount: 0,
+      totalExpenses: 0,
+      category: "General"
+    }
+  };
+
+  // Merge defaults with provided data
+  const safeData = { 
+    ...defaults[type] || {}, 
+    ...data,
+    stats: {
+      ...(defaults[type]?.stats || {}),
+      ...(data?.stats || {})
+    }
+  };
+
+  if (type === "monthly-report") {
+    const { month, stats = {}, insights = [] } = safeData;
+    const { totalIncome = 0, totalExpenses = 0, byCategory = {} } = stats;
+
+    return (
+      <Html>
+        <Head />
+        <Preview>Your Monthly Financial Report</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Monthly Financial Report</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              Here's your financial summary for {month}:
+            </Text>
+
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Total Income</Text>
+                <Text style={styles.heading}>${totalIncome}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Total Expenses</Text>
+                <Text style={styles.heading}>${totalExpenses}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Net</Text>
+                <Text style={styles.heading}>
+                  ${totalIncome - totalExpenses}
+                </Text>
+              </div>
+            </Section>
+
+            {Object.keys(byCategory).length > 0 && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Expenses by Category</Heading>
+                {Object.entries(byCategory).map(([category, amount]) => (
+                  <div key={category} style={styles.row}>
+                    <Text style={styles.text}>{category}</Text>
+                    <Text style={styles.text}>${amount}</Text>
+                  </div>
+                ))}
+              </Section>
+            )}
+
+            {insights?.length > 0 && (
+              <Section style={styles.section}>
+                <Heading style={styles.heading}>Financial Insights</Heading>
+                {insights.map((insight, index) => (
+                  <Text key={index} style={styles.text}>
+                    - {insight}
+                  </Text>
+                ))}
+              </Section>
+            )}
+
+            <Text style={styles.footer}>
+              Thank you for using our service. Keep tracking your finances for
+              better financial health!
+            </Text>
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+
+  if (type === "budget-alert") {
+    const { 
+      percentageUsed = 0, 
+      budgetAmount = 0, 
+      totalExpenses = 0, 
+      category = "General" 
+    } = safeData;
+
+    return (
+      <Html>
+        <Head />
+        <Preview>Budget Alert - {category}</Preview>
+        <Body style={styles.body}>
+          <Container style={styles.container}>
+            <Heading style={styles.title}>Budget Alert</Heading>
+            <Text style={styles.text}>Hello {userName},</Text>
+            <Text style={styles.text}>
+              You've used {percentageUsed.toFixed(1)}% of your {category} budget.
+            </Text>
+            <Section style={styles.statsContainer}>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Budget Amount</Text>
+                <Text style={styles.heading}>${budgetAmount}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Spent So Far</Text>
+                <Text style={styles.heading}>${totalExpenses}</Text>
+              </div>
+              <div style={styles.stat}>
+                <Text style={styles.text}>Remaining</Text>
+                <Text style={styles.heading}>
+                  ${Math.max(0, budgetAmount - totalExpenses)}
+                </Text>
+              </div>
+            </Section>
+            <Text style={styles.footer}>
+              Consider reviewing your spending to stay within budget.
+            </Text>
+          </Container>
+        </Body>
+      </Html>
+    );
+  }
+
+  // Fallback for unknown types
+  return (
+    <Html>
+      <Body>
+        <Text>Hello {userName},</Text>
+        <Text>Here's your notification.</Text>
+      </Body>
+    </Html>
+  );
+}
